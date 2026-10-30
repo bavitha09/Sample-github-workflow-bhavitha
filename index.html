@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Breathe</title>
+<style>
+:root{
+  --bg1:#1a1033;--bg2:#2b1a4d;--ink:#f3ecff;--mute:#a99cc9;
+  --glow:#ffb88c;--glow2:#b9a7ff;--panel:rgba(255,255,255,.07);--line:rgba(255,255,255,.14);
+  color-scheme:dark;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#1a1033;--bg2:#2b1a4d;--ink:#f3ecff;--mute:#a99cc9;--glow:#ffb88c;--glow2:#b9a7ff;--panel:rgba(255,255,255,.07);--line:rgba(255,255,255,.14);color-scheme:dark}}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg1:#fdf0e6;--bg2:#e9defa;--ink:#2a1a4a;--mute:#6b5a8e;--glow:#ff9a66;--glow2:#8a6cf0;--panel:rgba(42,26,74,.06);--line:rgba(42,26,74,.16);color-scheme:light}}
+:root[data-theme="dark"]{--bg1:#1a1033;--bg2:#2b1a4d;--ink:#f3ecff;--mute:#a99cc9;--glow:#ffb88c;--glow2:#b9a7ff;--panel:rgba(255,255,255,.07);--line:rgba(255,255,255,.14);color-scheme:dark}
+:root[data-theme="light"]{--bg1:#fdf0e6;--bg2:#e9defa;--ink:#2a1a4a;--mute:#6b5a8e;--glow:#ff9a66;--glow2:#8a6cf0;--panel:rgba(42,26,74,.06);--line:rgba(42,26,74,.16);color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:24px 16px;
+  font-family:"Fraunces",Georgia,serif;color:var(--ink);background:linear-gradient(160deg,var(--bg1),var(--bg2));overflow-x:hidden}
+.top{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);right:16px;display:flex;gap:8px}
+h1{margin:0;font-weight:400;font-size:clamp(28px,6vw,42px);letter-spacing:.01em;text-align:center}
+.sub{margin:6px 0 0;color:var(--mute);text-align:center;font-family:system-ui,sans-serif;font-size:15px}
+.modes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+button{font:inherit;color:inherit;cursor:pointer}
+.chip{font-family:system-ui,sans-serif;font-size:14px;padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--panel);transition:background .25s,border-color .25s,transform .15s}
+.chip:hover{border-color:var(--glow2)}
+.chip:active{transform:scale(.96)}
+.chip[aria-pressed="true"]{background:var(--glow2);border-color:var(--glow2);color:#150b2b}
+.icon{width:40px;height:40px;padding:0;font-size:18px}
+:focus-visible{outline:3px solid var(--glow);outline-offset:3px}
+
+.stage{position:relative;width:min(78vw,360px);aspect-ratio:1;display:grid;place-items:center}
+.ring{position:absolute;inset:0;border-radius:50%;border:1px dashed var(--line);animation:spin 40s linear infinite}
+.ring.r2{inset:-9%;animation-duration:70s;animation-direction:reverse;border-style:dotted}
+@keyframes spin{to{transform:rotate(360deg)}}
+.orb{position:absolute;width:62%;aspect-ratio:1;border-radius:50%;transform:scale(var(--s,.6));
+  background:radial-gradient(circle at 35% 30%,#fff7ee,var(--glow) 38%,var(--glow2) 100%);
+  box-shadow:0 0 calc(40px + 80px*var(--s,.6)) calc(10px*var(--s,.6)) color-mix(in srgb,var(--glow2) 55%,transparent),inset 0 -14px 40px rgba(60,20,120,.25);
+  will-change:transform}
+.idle .orb{animation:float 5s ease-in-out infinite}
+@keyframes float{50%{transform:scale(.66)}}
+.label{position:relative;z-index:2;text-align:center;color:#2a1450;pointer-events:none}
+.label b{display:block;font-weight:500;font-size:clamp(24px,5vw,32px)}
+.label span{font-family:system-ui,sans-serif;font-size:34px;font-variant-numeric:tabular-nums}
+.stats{display:flex;gap:12px;font-family:system-ui,sans-serif}
+.stat{min-width:104px;padding:12px 16px;border-radius:16px;background:var(--panel);border:1px solid var(--line);text-align:center}
+.stat strong{display:block;font-size:24px;font-variant-numeric:tabular-nums}
+.stat small{color:var(--mute);font-size:13px}
+.go{font-family:system-ui,sans-serif;font-size:17px;font-weight:600;padding:15px 44px;border-radius:999px;border:0;color:#150b2b;
+  background:linear-gradient(135deg,var(--glow),var(--glow2));box-shadow:0 10px 30px -10px var(--glow2);transition:transform .15s,box-shadow .25s}
+.go:hover{box-shadow:0 14px 36px -8px var(--glow2)}
+.go:active{transform:scale(.96)}
+.pulse{animation:pulse .5s ease-out}
+@keyframes pulse{from{transform:scale(1.35);opacity:.4}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.ring,.idle .orb{animation:none}.orb{transition:transform .6s}}
+</style>
+</head>
+<body class="idle">
+<div class="top">
+  <button class="chip icon" id="theme" aria-label="Toggle light and dark theme">◐</button>
+</div>
+
+<header>
+  <h1>Breathe</h1>
+  <p class="sub" id="desc">Four even sides. Calm your pulse in a few minutes.</p>
+</header>
+
+<div class="modes" role="group" aria-label="Breathing pattern" id="modes"></div>
+
+<div class="stage" aria-live="polite">
+  <div class="ring"></div><div class="ring r2"></div>
+  <div class="orb" id="orb"></div>
+  <div class="label"><b id="phase">Ready</b><span id="count"></span></div>
+</div>
+
+<div class="stats">
+  <div class="stat"><strong id="cycles">0</strong><small>cycles</small></div>
+  <div class="stat"><strong id="time">0:00</strong><small>time calm</small></div>
+</div>
+
+<button class="go" id="go">Begin</button>
+
+<script>
+const MODES={
+  "Box":{desc:"Four even sides. Calm your pulse in a few minutes.",p:[["Inhale",4,1],["Hold",4,1],["Exhale",4,.6],["Hold",4,.6]]},
+  "4-7-8":{desc:"A long exhale to wind down before sleep.",p:[["Inhale",4,1],["Hold",7,1],["Exhale",8,.6]]},
+  "Easy":{desc:"Five in, five out. Simple and steady.",p:[["Inhale",5,1],["Exhale",5,.6]]}
+};
+const $=id=>document.getElementById(id);
+const orb=$("orb"),phaseEl=$("phase"),countEl=$("count"),go=$("go");
+let mode="Box",running=false,pi=0,pStart=0,fromS=.6,cycles=0,elapsed=0,last=0,raf=0;
+
+// build mode chips
+Object.keys(MODES).forEach(name=>{
+  const b=document.createElement("button");
+  b.className="chip";b.textContent=name;b.setAttribute("aria-pressed",name===mode);
+  b.onclick=()=>{if(running)stop();mode=name;
+    document.querySelectorAll("#modes .chip").forEach(c=>c.setAttribute("aria-pressed",c===b));
+    $("desc").textContent=MODES[name].desc;reset()};
+  $("modes").appendChild(b);
+});
+
+function reset(){cycles=0;elapsed=0;pi=0;fromS=.6;orb.style.removeProperty("--s");
+  document.body.classList.add("idle");phaseEl.textContent="Ready";countEl.textContent="";render()}
+function render(){$("cycles").textContent=cycles;
+  const m=Math.floor(elapsed/60),s=Math.floor(elapsed%60);$("time").textContent=m+":"+String(s).padStart(2,"0")}
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+
+function begin(){running=true;go.textContent="Pause";document.body.classList.remove("idle");
+  pStart=last=performance.now();setPhase(pi);raf=requestAnimationFrame(tick)}
+function stop(){running=false;go.textContent="Resume";cancelAnimationFrame(raf)}
+function setPhase(i){pi=i;pStart=performance.now();
+  const ph=MODES[mode].p[i];phaseEl.textContent=ph[0];
+  phaseEl.classList.remove("pulse");void phaseEl.offsetWidth;phaseEl.classList.add("pulse");
+  fromS=parseFloat(getComputedStyle(orb).getPropertyValue("--s"))||.6;
+  if(navigator.vibrate)try{navigator.vibrate(12)}catch(e){}}
+function tick(now){
+  if(!running)return;
+  elapsed+=(now-last)/1000;last=now;
+  const P=MODES[mode].p,ph=P[pi],dur=ph[1]*1000,t=Math.min((now-pStart)/dur,1);
+  const target=ph[2];
+  orb.style.setProperty("--s",(fromS+(target-fromS)*ease(t)).toFixed(4));
+  countEl.textContent=Math.max(1,Math.ceil(ph[1]-(now-pStart)/1000));
+  if(t>=1){const n=(pi+1)%P.length;if(n===0)cycles++;setPhase(n)}
+  render();raf=requestAnimationFrame(tick);
+}
+go.onclick=()=>running?stop():begin();
+document.addEventListener("keydown",e=>{if(e.code==="Space"&&e.target.tagName!=="BUTTON"){e.preventDefault();go.click()}});
+
+// theme toggle (remembered when storage is available)
+const root=document.documentElement;
+try{const t=localStorage.getItem("breathe-theme");if(t)root.dataset.theme=t}catch(e){}
+$("theme").onclick=()=>{
+  const dark=root.dataset.theme?root.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+  root.dataset.theme=dark?"light":"dark";
+  try{localStorage.setItem("breathe-theme",root.dataset.theme)}catch(e){}
+};
+render();
+</script>
+</body>
+</html>
